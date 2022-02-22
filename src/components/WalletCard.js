@@ -2,12 +2,14 @@ import React, {useState} from 'react';
 import {ethers} from 'ethers';
 import '../styles/WalletCard.css';
 
-const WalletCard = () => {
 
+const WalletCard = () => {
+	const provider = new ethers.providers.Web3Provider(window.ethereum);
 	const [errorMessage, setErrorMessage] = useState(null);
 	const [defaultAccount, setDefaultAccount] = useState(null);
 	const [userBalance, setUserBalance] = useState(null);
 	const [connButtonText, setConnButtonText] = useState('Connect Wallet');
+	const [blockNumber, setBlockNumber] = useState(0);
 
 	const connectWalletHandler = () => {
 		if (window.ethereum && window.ethereum.isMetaMask) {
@@ -18,6 +20,8 @@ const WalletCard = () => {
 				accountChangedHandler(result[0]);
 				setConnButtonText('Wallet Connected');
 				getAccountBalance(result[0]);
+				
+				
 			})
 			.catch(error => {
 				setErrorMessage(error.message);
@@ -29,7 +33,13 @@ const WalletCard = () => {
 			setErrorMessage('Please install MetaMask browser extension to interact');
 		}
 	}
-
+	
+	const getBlockNumber = () => {
+		provider.getBlockNumber();
+		console.log(provider.blockNumber);
+		setBlockNumber(provider.blockNumber);
+		
+	}
 	
 	const accountChangedHandler = (newAccount) => {
 		setDefaultAccount(newAccount);
@@ -65,6 +75,10 @@ const WalletCard = () => {
 					</div>
 					<div className='balanceDisplay my-3'>
 						<h4>Balance: {userBalance}</h4>
+					</div>
+					<button className='my-3 buttonSubmit' onClick={getBlockNumber}>Get Block Number</button>
+					<div className='balanceDisplay my-3'>
+						<h4>BlockNumber: {blockNumber}</h4>
 					</div>
 					{errorMessage}
 			</div>
