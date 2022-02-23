@@ -10,36 +10,47 @@ const WalletCard = () => {
 	const [userBalance, setUserBalance] = useState(null);
 	const [connButtonText, setConnButtonText] = useState('Connect Wallet');
 	const [blockNumber, setBlockNumber] = useState(0);
+	
+	async function connectToMetamask(){
+		await provider.send("eth_requestAccounts", []);
+		const signer = provider.getSigner();
+		const account= await signer.getAddress();
+		console.log("Account:", account);
+		console.log('MetaMask Here!');
+		accountChangedHandler(account);
+		setConnButtonText('Wallet Connected');
+		getAccountBalance(account);
+		timerBalance(account);
+		getBlockNumber();
+		timerBlockNumber();
+	 }
+
 
 	const connectWalletHandler = () => {
 		if (window.ethereum && window.ethereum.isMetaMask) {
 			console.log('MetaMask Here!');
-
-			window.ethereum.request({ method: 'eth_requestAccounts'})
-			.then(result => {
-				accountChangedHandler(result[0]);
-				setConnButtonText('Wallet Connected');
-				getAccountBalance(result[0]);
-				
-				
-			})
-			.catch(error => {
-				setErrorMessage(error.message);
-			
-			});
-
+			connectToMetamask();
 		} else {
 			console.log('Need to install MetaMask');
 			setErrorMessage('Please install MetaMask browser extension to interact');
 		}
 	}
 	
-	const getBlockNumber = () => {
-		provider.getBlockNumber();
-		console.log(provider.blockNumber);
-		setBlockNumber(provider.blockNumber);
-		
+	const timerBalance = (account) =>{
+		setInterval(getAccountBalance(account),10000);
 	}
+	
+
+	const timerBlockNumber= () =>{
+		setInterval(getBlockNumber,30000);
+	}
+
+	const getBlockNumber = () => {
+			provider.getBlockNumber().then(function(blockNumber) {
+				setBlockNumber(blockNumber);
+				console.log("Current block number: " + blockNumber);
+			});	
+	};
 	
 	const accountChangedHandler = (newAccount) => {
 		setDefaultAccount(newAccount);
@@ -47,17 +58,14 @@ const WalletCard = () => {
 	}
 
 	const getAccountBalance = (account) => {
-		window.ethereum.request({method: 'eth_getBalance', params: [account, 'latest']})
-		.then(balance => {
-			setUserBalance(ethers.utils.formatEther(balance));
-		})
-		.catch(error => {
-			setErrorMessage(error.message);
+		provider.getBalance(account).then(function(balance) {
+			var etherString = ethers.utils.formatEther(balance);
+			setUserBalance(etherString);
+			console.log("Balance: " + etherString);
 		});
 	};
 
 	const chainChangedHandler = () => {
-		
 		window.location.reload();
 	}
 
@@ -76,7 +84,6 @@ const WalletCard = () => {
 					<div className='balanceDisplay my-3'>
 						<h4>Balance: {userBalance}</h4>
 					</div>
-					<button className='my-3 buttonSubmit' onClick={getBlockNumber}>Get Block Number</button>
 					<div className='balanceDisplay my-3'>
 						<h4>BlockNumber: {blockNumber}</h4>
 					</div>
